@@ -1,0 +1,402 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #0000ff; }
+code > span.ch { color: #008080; }
+code > span.st { color: #008080; }
+code > span.co { color: #008000; }
+code > span.ot { color: #ff4000; }
+code > span.al { color: #ff0000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="C:/Program Files (x86)/smark-2.0.2-win32-portable/smark.css" type="text/css" />
+<style type="text/css">
+  span.MathJax_SVG { zoom : 1.6; }
+</style></head>
+<body>
+<h1 id="parallel-processing-and-multi-core-utilization-with-java">Parallel Processing and Multi-Core Utilization with Java</h1>
+<p><a href="http://embarcaderos.net/2011/01/23/parallel-processing-and-multi-core-utilization-with-java/">Origin</a></p>
+<p>In order to harvest the full power of a multi-core processor the software application must be able to execute tasks in parallel utilizing all available CPUs. Parallelization of a process consist of breaking up a large single process into multiple smaller tasks that can run in parallel and once finalized can be combined obtaining an overall improvement in performance. The result is the execution of a single task or process by multiple processors or CPUs <strong><em>&quot;Parallel Processing&quot;</em></strong>, not to be confused with <strong><em>concurrency</em></strong>.</p>
+<p>In this article I look into Java 6 and Java 7 concurrency libraries with the newly added Fork/Join support in the case of Java 7 to achieve asynchronous parallelization, improve performance and take advantage of a multi-core environment.</p>
+<ol style="list-style-type: decimal">
+<li><a href="#1">Java 6 Concurrency Library</a></li>
+<li><a href="#2">The <code>SerialTest</code> class</a></li>
+<li><a href="#3">The <code>ExecutorServiceTest</code> class</a></li>
+<li><a href="#4">The <code>CompletionServiceTest</code> class</a></li>
+<li><a href="#5">Implementing a call back to join the results: The <code>CallBackTest</code> class</a></li>
+<li><a href="#6">Multi-Core utilization: Increasing the number of threads</a></li>
+<li><a href="#7">Multi-Core utilization, thread pool size and load</a></li>
+<li><a href="#8">Java 7 Fork/Join framework</a></li>
+<li><a href="#9">Environment used</a></li>
+</ol>
+<h2 id="java-6-concurrency-library"><a name"1"></a>Java 6 Concurrency Library</h2>
+<p>So let’s first look at some of the option that Java 6 concurrency library offers.</p>
+<p>Let’s start with a class that will be called from all test classes, this class will perform a task to give the process some load. The class called Task will implement <code>Callable</code>. The call method will sleep for 1 second and then it will perform some task like concatenate a string a number of times. The idea is to simulate a task that first makes a call to a remote service and waits for a seconds for the call to return (this is the sleep) and then simulates some processing to the result like formatting or decoration (this is the loop that concatenates a string).</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">import java.util.concurrent.Callable;</span>
+<span class="kw">public</span> <span class="kw">class</span> Task <span class="kw">implements</span> Callable {
+   <span class="kw">private</span> <span class="dt">int</span> seq;
+   <span class="kw">public</span> <span class="fu">Task</span>() {}
+   <span class="kw">public</span> <span class="fu">Task</span>(<span class="dt">int</span> i) { seq = i; }
+
+   <span class="kw">public</span> Object <span class="fu">call</span>() {
+      String str = <span class="st">&quot;&quot;</span>;
+      <span class="dt">long</span> begTest = <span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>();
+      System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;start - Task &quot;</span>+seq);
+      <span class="kw">try</span> {
+         <span class="co">// sleep for 1 second to simulate a remote call,</span>
+         <span class="co">// just waiting for the call to return</span>
+         Thread.<span class="fu">sleep</span>(<span class="dv">1000</span>);
+         <span class="co">// loop that just concatenate a str to simulate</span>
+         <span class="co">// work on the result form remote call</span>
+         <span class="kw">for</span>(<span class="dt">int</span> i = <span class="dv">0</span>; i &lt; <span class="dv">20000</span>; i++)
+            str = str + &#39;t&#39;;
+      } <span class="kw">catch</span> (InterruptedException e) {}
+      Double secs = <span class="kw">new</span> Double((<span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>() - begTest)*<span class="fl">0.001</span>);
+      System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;run time &quot;</span> + secs + <span class="st">&quot; secs&quot;</span>);
+      <span class="kw">return</span> seq;
+    }
+}</code></pre>
+<h2 id="the-serialtest-class"><a name"2"></a>The <code>SerialTest</code> class</h2>
+<p>Next I will introduce a class that will execute a task a number of times in a synchronous - serial mode and will display progress and time of execution; this way we will have the execution time to compare with other versions of the test that will use Java concurrent framework. We will start with 50 tasks to execute on every test.</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">public</span> <span class="kw">class</span> SerialTest {
+   <span class="kw">private</span> <span class="dt">static</span> <span class="dt">int</span> NUM_OF_TASKS = <span class="dv">50</span>;
+
+   <span class="kw">public</span> <span class="fu">SerialTest</span> () {}
+
+   <span class="kw">public</span> <span class="dt">void</span> <span class="fu">run</span>() {
+      <span class="dt">long</span> begTest = <span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>();
+      Object taskResult;
+      <span class="kw">for</span>(<span class="dt">int</span> i=<span class="dv">0</span>;i &lt; NUM_OF_TASKS;i++) {
+         Task task = <span class="kw">new</span> <span class="fu">Task</span>(i);
+         taskResult = task.<span class="fu">call</span>();
+         System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;result &quot;</span>+taskResult);
+      }
+      Double secs = <span class="kw">new</span> Double((<span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>() - begTest)*<span class="fl">0.001</span>);
+      System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;run time &quot;</span> + secs + <span class="st">&quot; secs&quot;</span>);
+   }
+   <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span>(String[] args) {
+      <span class="kw">new</span> <span class="fu">SerialTest</span>().<span class="fu">run</span>();
+      System.<span class="fu">exit</span>(<span class="dv">0</span>);
+   }
+}</code></pre>
+<p>image 1. Running SerialTest class shows this result:</p>
+<div class="figure">
+<img src="images/1.png" title="Running SerialTest class shows this result" />
+</div>
+<p>No surprise it takes 65 seconds since we executed 50 tasks and every task sleeps for 1 second plus the time it will take to concatenate 20K strings and all is executed serially.</p>
+<p>image 2. The Task Manager performance view while the SerialTest is running:</p>
+<div class="figure">
+<img src="images/2.png" title="The Task Manager performance view while the SerialTest is running" />
+</div>
+<p>I am running the test in a 8 CPU box, the performance view shows a CPU usage of only 5% of the total CPU power combined, the view shows that 4 of the CPUs are idle and the other 4 have minimal activity with most likely one running our test and the other 3 performing some OS tasks.</p>
+<h2 id="the-executorservicetest-class"><a name"3"></a>The <code>ExecutorServiceTest</code> class</h2>
+<p>Now we will write the first test class using Java 6 Concurrent framework classes. Since Java 5 executing tasks in parallel is much easier, there is no need to use threads directly. The introduction of the <code>ExecutorService</code> in the concurrent package make it easy to submit tasks and the service will execute them and hand us back a future object that we can use to test the progress and to obtain the result of a given executed task once it finishes. The <code>ExecutorService</code> will use threads internally to achieve parallelization and since the tasks are submitted we can also execute the tasks asynchronously, once all the tasks at hand are submitted we can move ahead in the main thread and do something else or just wait and monitor for the tasks that end to get the results making possible to achieve fork/join processing.</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">import java.util.ArrayList;</span>
+<span class="kw">import java.util.List;</span>
+<span class="kw">import java.util.concurrent.*;</span>
+
+<span class="kw">public</span> <span class="kw">class</span> ExecutorServiceTest {
+   <span class="kw">private</span> <span class="dt">static</span> <span class="dt">int</span> NUM_OF_TASKS = <span class="dv">50</span>;
+
+   <span class="kw">public</span> <span class="fu">ExecutorServiceTest</span>() {}
+
+   <span class="kw">public</span> <span class="dt">void</span> <span class="fu">run</span>() {
+      <span class="dt">long</span> begTest = <span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>();
+
+      List&lt; Future &gt; futuresList = <span class="kw">new</span> ArrayList&lt; Future &gt;();
+      <span class="dt">int</span> nrOfProcessors = Runtime.<span class="fu">getRuntime</span>().<span class="fu">availableProcessors</span>();
+      ExecutorService eservice = Executors.<span class="fu">newFixedThreadPool</span>(nrOfProcessors);
+
+      <span class="kw">for</span>(<span class="dt">int</span> index = <span class="dv">0</span>; index &lt; NUM_OF_TASKS; index++)
+         futuresList.<span class="fu">add</span>(eservice.<span class="fu">submit</span>(<span class="kw">new</span> <span class="fu">Task</span>(index)));
+
+         Object taskResult;
+         <span class="kw">for</span>(Future future:futuresList) {
+            <span class="kw">try</span> {
+               taskResult = future.<span class="fu">get</span>();
+               System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;result &quot;</span>+taskResult);
+         }
+         <span class="kw">catch</span> (InterruptedException e) {}
+         <span class="kw">catch</span> (ExecutionException e) {}
+      }
+      Double secs = <span class="kw">new</span> Double((<span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>() - begTest)*<span class="fl">0.001</span>);
+      System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;run time &quot;</span> + secs + <span class="st">&quot; secs&quot;</span>);
+    }
+
+    <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span>(String[] args) {
+       <span class="kw">new</span> <span class="fu">ExecutorServiceTest</span>().<span class="fu">run</span>();
+       System.<span class="fu">exit</span>(<span class="dv">0</span>);
+    }
+}</code></pre>
+<p>image 3. Running <code>ExecutorServiceTest</code> class will show this result: <img src="images/3.png" title="Running ExecutorServiceTest class will show this result" /></p>
+<p>16.73 seconds! a 75% improvement over the <code>SerialTest</code> class result.</p>
+<p>The <code>ExecutorServiceTest</code> class utilizes the <code>ExecutorService</code> to achieve this huge improvement so let's look closely how this is done:</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="dt">int</span> nrOfProcessors = Runtime.<span class="fu">getRuntime</span>().<span class="fu">availableProcessors</span>();
+  ExecutorService eservice = Executors.<span class="fu">newFixedThreadPool</span>(nrOfProcessors);</code></pre>
+<p>The <code>ExecutorService</code> is initialized by callings the static method <code>newFixedThreadPool</code> from the <code>Executors</code> class, the <code>Executor</code> class is a factory class to create <code>ExecutorService</code> instances with initialized thread pools. The test uses the <code>newFixedThreadPool</code> that created a pool with a fixed number of threads that are reused. In this test the number of available processors is passed to the factory so the <code>ExecutorService</code> is created with as many threads in the pool as available processors.</p>
+<p>image 4. The Task Manager performance view while the <code>ExecutorServiceTest</code> is running:</p>
+<div class="figure">
+<img src="images/4.png" title="The Task Manager performance view while the ExecutorServiceTest is running" />
+</div>
+<p>Using the <code>ExecutorService</code> to submit the 50 tasks for execution with a pool of 8 threads utilizes an average 60+% of the total power available utilizing all available processors and still leaving enough processing power (near 40%) for the OS and other processes.</p>
+<p>Now let's go back to the code and continue analyzing the concurrent implementation. The next snipped of code shows how the tasks are submitted to the <code>ExecutorService</code>:</p>
+<pre class="sourceCode java"><code class="sourceCode java">   <span class="kw">for</span>(<span class="dt">int</span> index = <span class="dv">0</span>; index &lt; NUM_OF_TASKS; index++)
+      futuresList.<span class="fu">add</span>(eservice.<span class="fu">submit</span>(<span class="kw">new</span> <span class="fu">Task</span>(index)));</code></pre>
+<p>The newly created instance of Task is passed to the <code>ExecutorService</code> <code>submit</code> method and that call returns a handle to a <code>Future</code> interface that represents the result of an asynchronous operation. The future provides methods to check if the operation is completed and once is completed give us access to the result of the operation, in our test the result of the task. We add the futures returned to a list that we will use later to obtain the results.</p>
+<pre class="sourceCode java"><code class="sourceCode java">    Object taskResult;
+    <span class="kw">for</span>(Future future:futuresList) {
+       <span class="kw">try</span> {
+          taskResult = future.<span class="fu">get</span>();
+          System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;result &quot;</span>+taskResult);
+       }
+       <span class="kw">catch</span> (InterruptedException e) {}
+       <span class="kw">catch</span> (ExecutionException e) {}
+    }</code></pre>
+<p>In this last snipped loops the list of futures to obtain the results and display them, notice the use of the <code>taskResult</code> of type <code>Object</code> to obtain the returned value of the asyncronously processed task, the result can be casted to its returned type if needed. Also notice that future.get is called sequentially by looping the list of futures, since we submitted the task in order the results are received in the same order. This works fine in some cases but in cases where some tasks could take longer to executed than others the call to <code>future.get</code> will block the execution of the main thread until the tasks at hand represented by its future finishes, until then the call blocks waiting for the result. One way to solve this problem is to use <code>future.isDone</code> method and only call <code>future.get</code> method when <code>future.isDone</code> method returns true, else test another future in the list.</p>
+<p>With this implementation we improved our test quite a bit using the concurrent framework but we are left with the potential problem of blocking while getting the results. Instead of using <code>future.isDone</code> we are going to use a <code>CompletionService</code> class to solve this problem.</p>
+<h2 id="the-completionservicetest-class"><a name"4"></a>The <code>CompletionServiceTest</code> class</h2>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">import java.util.concurrent.*;</span>
+
+<span class="kw">public</span> <span class="kw">class</span> CompletionServiceTest {
+   <span class="kw">private</span> <span class="dt">static</span> <span class="dt">int</span> NUM_OF_TASKS = <span class="dv">50</span>;
+
+   <span class="kw">public</span> <span class="fu">CompletionServiceTest</span>() {}
+
+   <span class="kw">public</span> <span class="dt">void</span> <span class="fu">run</span>() {
+      <span class="dt">long</span> begTest = <span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>();
+
+      <span class="dt">int</span> nrOfProcessors = Runtime.<span class="fu">getRuntime</span>().<span class="fu">availableProcessors</span>();
+      ExecutorService eservice = Executors.<span class="fu">newFixedThreadPool</span>(nrOfProcessors);
+      CompletionService &lt; Object &gt; cservice = <span class="kw">new</span> ExecutorCompletionService &lt; Object &gt; (eservice);
+
+      <span class="kw">for</span> (<span class="dt">int</span> index = <span class="dv">0</span>; index &lt; NUM_OF_TASKS; index++)
+         cservice.<span class="fu">submit</span>(<span class="kw">new</span> <span class="fu">Task</span>(index));
+
+      Object taskResult;
+      <span class="kw">for</span>(<span class="dt">int</span> index = <span class="dv">0</span>; index &lt; NUM_OF_TASKS; index++) {
+         <span class="kw">try</span> {
+            taskResult = cservice.<span class="fu">take</span>().<span class="fu">get</span>();
+            System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;result &quot;</span>+taskResult);
+         }
+         <span class="kw">catch</span> (InterruptedException e) {}
+         <span class="kw">catch</span> (ExecutionException e) {}
+      }
+      Double secs = <span class="kw">new</span> Double((<span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>() - begTest)*<span class="fl">0.001</span>);
+      System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;run time &quot;</span> + secs + <span class="st">&quot; secs&quot;</span>);
+   }
+
+   <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span>(String[] args) {
+      <span class="kw">new</span> <span class="fu">CompletionServiceTest</span>().<span class="fu">run</span>();
+      System.<span class="fu">exit</span>(<span class="dv">0</span>);
+   }
+}</code></pre>
+<p>image 5. Running <code>CompletionServiceTest</code> class will show this result: <img src="images/5.png" title="Running CompletionServiceTest class will show this result" /></p>
+<p>Down to 16.21 seconds from 16.67 seconds, a minimal improvement and the reason is because all tasks do exactly the same and take about the same time but even under this scenario the <code>CompletionService</code> shows improvement in performance!</p>
+<p>Notice that this time image 5 shows a larger console showing more of the results. Looking closely at the details shown in the console we can see that task 47 displayed result between tasks 43 and 44 and we can also see that task 47 took 2.544 secs that is less than the 2.667 secs that took task 44 to complete so the use of <code>CompletionService</code> gave the advantage of getting the tasks that completed first even if they were submitted later in the order.</p>
+<p>Let's take a look at the specific <code>completionService</code> code:</p>
+<pre class="sourceCode java"><code class="sourceCode java">   ExecutorService eservice = Executors.<span class="fu">newFixedThreadPool</span>(nrOfProcessors);
+   CompletionService &lt; Object &gt; cservice = <span class="kw">new</span> ExecutorCompletionService &lt; Object &gt; (eservice);
+
+   Object taskResult;
+   <span class="kw">for</span>(<span class="dt">int</span> index = <span class="dv">0</span>; index &lt; NUM_OF_TASKS; index++) {
+      <span class="kw">try</span> {
+         taskResult = cservice.<span class="fu">take</span>().<span class="fu">get</span>();</code></pre>
+<p>The <code>CompletionService</code> interface and the <code>ExecutorCompletionService</code> class provide us with a tool that we can use combined with an <code>ExecutorService</code> to decouple the execution and the results. We can use the <code>CompletionService</code> to get the next available future that finished processing regardless the order of submission to the <code>ExecutorService</code>. The <code>ExecutorCompletionService</code> constructor takes an <code>Executor</code> as parameter, in our case an <code>ExecutorService</code> instance and what we get with the <code>ExecutorCompletionService</code> is basically a queue that returns the futures in the order that they complete.</p>
+<p>The <code>CompletionServiceTest</code> eliminates the problem of the main thread blocking when joining the results of the tasks but this implementation still holds the main thread until all tasks have finished. The next implementation will remove this limitation allowing the main thread (the one that run the *Test class) to do other work while the tasks are executed.</p>
+<h2 id="implementing-a-call-back-to-join-the-results-the-callbacktest-class"><a name"5"></a>Implementing a call back to join the results: The <code>CallBackTest</code> class</h2>
+<p>The call back implementation will pass the control to the task making it responsible for calling back with the result when it finishes executing. Our test class will only submit the tasks but no longer needs to wait for the results improving performance and allowing the main thread to move on and perform other work.</p>
+<p>A new task class, the <code>CallBackTask</code> class:</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">import java.util.concurrent.Callable;</span>
+
+<span class="kw">public</span> <span class="kw">class</span> CallBackTask <span class="kw">implements</span> Callable {
+    <span class="kw">private</span> CallBackTest callBackTest;
+    <span class="kw">private</span> <span class="dt">int</span> seq;
+
+    <span class="kw">public</span> <span class="fu">CallBackTask</span>() {}
+    <span class="kw">public</span> <span class="fu">CallBackTask</span>(<span class="dt">int</span> i) { seq = i; }
+
+    <span class="kw">public</span> Object <span class="fu">call</span>() {
+       String str = <span class="st">&quot;&quot;</span>;
+       <span class="dt">long</span> begTest = <span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>();
+       System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;start - Task &quot;</span>+seq);
+       <span class="kw">try</span> {
+          <span class="co">// sleep for 1 second to simulate a remote call,</span>
+          <span class="co">// just waiting for the call to return</span>
+          Thread.<span class="fu">sleep</span>(<span class="dv">1000</span>);
+          <span class="co">// loop that just concatenate a str to simulate</span>
+          <span class="co">// work on the result form remote call</span>
+          <span class="kw">for</span>(<span class="dt">int</span> index = <span class="dv">0</span>; index &lt; <span class="dv">20000</span>; index++)
+             str = str + &#39;t&#39;;
+       } <span class="kw">catch</span> (InterruptedException e) {}
+
+       callBackTest.<span class="fu">callBack</span>(seq);
+
+       Double secs = <span class="kw">new</span> Double((<span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>() - begTest)*<span class="fl">0.001</span>);
+       System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;task -&quot;</span>+seq+<span class="st">&quot; took &quot;</span> + secs + <span class="st">&quot; secs&quot;</span>);
+       <span class="kw">return</span> <span class="kw">null</span>;
+    }
+
+    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">setCaller</span>(CallBackTest callBackTest) {
+       <span class="kw">this</span>.<span class="fu">callBackTest</span> = callBackTest;
+    }
+
+    <span class="kw">public</span> CallBackTest <span class="fu">getCaller</span>() {
+       <span class="kw">return</span> callBackTest;
+    }
+}</code></pre>
+<p>The new task class performs the same work but implements the new accessor methods <code>setCaller</code> and <code>getCaller</code>. The <code>setCaller</code> method is invoked from the test class passing its own reference to allow the task to call back when it is done. Notice that the 'call' method in the <code>CallBackTask</code> class no longer returns a value, instead it calls the method <code>callBack</code> from the instance reference set from the test class (set by the <code>setCaller</code> method).</p>
+<p>The <code>CallBackTest</code> class:</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">import java.util.concurrent.*;</span>
+
+<span class="kw">public</span> <span class="kw">class</span> CallBackTest {
+   <span class="kw">private</span> <span class="dt">static</span> <span class="dt">int</span> NUM_OF_TASKS = <span class="dv">50</span>;
+   Object result;
+   <span class="dt">int</span> cnt = <span class="dv">0</span>;
+   <span class="dt">long</span> begTest, endTest;
+
+   <span class="kw">public</span> <span class="fu">CallBackTest</span>() {
+      begTest = <span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>();
+   }
+
+   <span class="kw">public</span> <span class="dt">void</span> <span class="fu">callBack</span>(Object result) {
+      System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;result &quot;</span>+result);
+      <span class="kw">this</span>.<span class="fu">result</span> = result;
+      <span class="kw">if</span>(++cnt == <span class="dv">50</span>) {
+         Double secs = <span class="kw">new</span> Double((<span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>() - begTest)*<span class="fl">0.001</span>);
+         System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;run time &quot;</span> + secs + <span class="st">&quot; secs&quot;</span>);
+         System.<span class="fu">exit</span>(<span class="dv">0</span>);
+      }
+   }
+
+   <span class="kw">public</span> <span class="dt">void</span> <span class="fu">run</span>() {
+      <span class="dt">int</span> nrOfProcessors = Runtime.<span class="fu">getRuntime</span>().<span class="fu">availableProcessors</span>();
+      ExecutorService es = Executors.<span class="fu">newFixedThreadPool</span>(nrOfProcessors);
+      <span class="kw">for</span>(<span class="dt">int</span> i = <span class="dv">0</span>;  i &lt; NUM_OF_TASKS; i++) {
+         CallBackTask task = <span class="kw">new</span> <span class="fu">CallBackTask</span>(i);
+         task.<span class="fu">setCaller</span>(<span class="kw">this</span>);
+         es.<span class="fu">submit</span>(task);
+         <span class="co">// at this point after submitting the tasks the</span>
+         <span class="co">// main thread is free to perform other work.</span>
+      }
+   }
+
+   <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span>(String[] args) {
+      <span class="kw">new</span> <span class="fu">CallBackTest</span>().<span class="fu">run</span>();
+   }
+}</code></pre>
+<p>A method <code>callBack</code> is implemented in this new test class, this method is called by the tasks instances to call back the caller (<code>CallBackTest</code>) and hand back the result, there is a simple check in this method to know when the last result is received and terminate the process. The other important difference in the <code>CallBackTest</code> class is in the <code>run</code> method, notice that after the task object (<code>CallBackTask</code>) is instantiated the method <code>setCaller</code> is invoked passing <code>this</code>, this is to pass a reference of the test instance to the task to allow the call back.</p>
+<p>image 6. With all the changes set let's take a look at how this new implementation performs:</p>
+<div class="figure">
+<img src="images/6.png" title="With all the changes set let&#39;s take a look at how this new implementation performs" />
+</div>
+<p>The <code>CallBackTest</code> shows a little improvement in performance with the added advantage of being fully asynchronous.</p>
+<h2 id="multi-core-utilization-increasing-the-number-of-threads"><a name="6"></a>Multi-Core utilization: Increasing the number of threads</h2>
+<p>The CPU performance view showed a CPU usage of about 61% (image. 4) when we executed the concurrent implementation <code>ExecutorServiceTest</code>, <code>CompletionServiceTest</code> and <code>CallBackTest</code> yielded similar CPU utilization. What could be done to use the CPU power in more efficient way and improve our performance? One easy way to achieve better performance will be to be able to use the other 40% of CPU power that was not used. For that we can increase the number of threads in the <code>CallBackTest</code> pool from 8 (number of available CPUs) to 50 (number of tasks to run).</p>
+<p>The next test of the <code>CallBackTest</code> class will set the fixed threads in the pool to 50.</p>
+<pre class="sourceCode java"><code class="sourceCode java">ExecutorService es = Executors.<span class="fu">newFixedThreadPool</span>(<span class="dv">50</span>);</code></pre>
+<p>image 7. <code>CallBackTest</code> with 50 threads in pool result: <img src="images/7.png" title="CallBackTest with 50 threads in pool result" /></p>
+<p>Just under 11 seconds! in the console we can see that the tasks were taking about 10.9 secs to execute each but since we had as many threads in the pool as we had tasks to execute all executed in parallel.</p>
+<p>image 8. The CPU performance view: <img src="images/8.png" title="The CPU performance view" /></p>
+<p>The CPU usage shows that all CPU power is maxed out @ 100% while the <code>CallBackTest</code> class runs with 50 threads in the pool.</p>
+<h2 id="multi-core-utilization-thread-pool-size-and-load"><a name="7"></a>Multi-Core utilization, thread pool size and load</h2>
+<p>Improvement in performance was obtained when the number of threads in the pool was increased from 8 to 50. With the task class used in this article it was possible to increase performance but this is not always the case. Finding out the optimal number of threads in the pool requires testing and fine tuning. If the task in this article was more processor intense and longer to execute other would have been the result when the threads in the pool were increased. I find that if the environment is dedicated a good starting point is a thread pool of the same size of available CPUs.</p>
+<p>I ran three tests with the <code>CompletionServiceTest</code> class changing the number of threads and the pool size to show the state of the threads while executing.</p>
+<p>image 9. Profiler view of the first test that submits 50 tasks and sets 8 threads in the pool. <img src="images/9.png" title="Profiler view of the first test that submits 50 tasks and sets 8 threads in the pool" /></p>
+<p>With 8 CPUs and 8 threads each thread executes a task non-stop, the 8 threads state stays runnable (green) until the tasks are finished and then the threads go back to the pool and remain in waiting state (yellow) until they are assigned another task.</p>
+<p>image 10. Profiler view of the second test that submits 8 tasks with a pool thread size of 8. <img src="images/10.png" title="Profiler view of the second test that submits 8 tasks with a pool thread size of 8." /></p>
+<p>In this test the 8 threads are scheduled to execute one task each and since there are 8 available CPUs all stay in runnable state (green) non-stop until they all finished.</p>
+<p>image 11. Profiler view of the last test showing the last 8 threads of the submitted 50 tasks with 50 threads in the pool. <img src="images/11.png" title="Profiler view of the last test showing the last 8 threads of the submitted 50 tasks with 50 threads in the pool." /></p>
+<p>The 50 tasks are scheduled at the same time assigned to the 50 threads, since there are only 8 available CPUs the threads are runnable (green) for a short period of time and then go into blocked state (red) showing contention between the threads. The threads use a time slice of the CPU and the process must perform context switching every time another thread goes from blocked to runnable state and that is an expensive operation. scheduling a high number or threads could have a negative effect in performance.</p>
+<h2 id="java-7-forkjoin-framework"><a name="8"></a>Java 7 Fork/Join framework</h2>
+<p>I executed all test classes with Java 7 (jdk 1.7) and all results obtained were consistently same or better than the results with Java 6 (JDK 1.6) pointing to a possible optimization of the concurrent package.</p>
+<p>An important addition to the concurrent package in Java 7 is the Fork/Join. The last test will use the newly added classes just to show how it can be integrated with existing concurrent package classes. This is not a full implementation of the Fork/Join framework but just a test using the <code>RecursiveTask</code> and <code>ForkJoinPool</code> classes in conjunction with the <code>Future</code> class.</p>
+<p>A task implementation for <code>ForkJoin</code>: The <code>FJTask</code> class:</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">import java.util.concurrent.RecursiveTask;</span>
+<span class="kw">class</span> FJTask <span class="kw">extends</span> RecursiveTask {
+   <span class="kw">private</span> <span class="dt">int</span> seq;
+
+   <span class="kw">public</span> <span class="fu">FJTask</span>(<span class="dt">int</span> n) { <span class="kw">this</span>.<span class="fu">seq</span> = n; }
+
+   <span class="kw">public</span> Integer <span class="fu">compute</span>() {
+      String str = <span class="st">&quot;&quot;</span>;
+      <span class="dt">long</span> begTest = <span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>();
+      System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;start - Task &quot;</span>+seq);
+      <span class="kw">try</span> {
+         Thread.<span class="fu">sleep</span>(<span class="dv">1000</span>);
+         <span class="kw">for</span>(<span class="dt">int</span> index = <span class="dv">0</span>; index &lt; <span class="dv">20000</span>; index++)
+            str = str + &#39;t&#39;;
+      } <span class="kw">catch</span> (InterruptedException e) {}
+      Double secs = <span class="kw">new</span> Double((<span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>() - begTest)*<span class="fl">0.001</span>);
+      System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;run time &quot;</span> + secs + <span class="st">&quot; secs&quot;</span>);
+      <span class="kw">return</span> seq;
+   }
+}</code></pre>
+<p>This is the implementation task to be used by the <code>ForkJoinPoolTest</code>; it extends <code>RecursiveTask</code> and implements the method <code>compute</code>.</p>
+<p>The <code>ForkJoinPoolTest</code> class:</p>
+<pre class="sourceCode java"><code class="sourceCode java"><span class="kw">import java.util.ArrayList;</span>
+<span class="kw">import java.util.List;</span>
+<span class="kw">import java.util.concurrent.*;</span>
+
+<span class="kw">public</span> <span class="kw">class</span> ForkJoinPoolTest {
+
+   <span class="kw">public</span> <span class="fu">ForkJoinPoolTest</span>() {}
+   <span class="kw">private</span> <span class="dt">static</span> <span class="dt">int</span> numOfTasks = <span class="dv">50</span>;
+
+   <span class="kw">public</span> <span class="dt">void</span> <span class="fu">run</span>() {
+      <span class="dt">long</span> begTest = <span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>();
+
+      List futuresList = <span class="kw">new</span> ArrayList();
+      ForkJoinPool fjPool = <span class="kw">new</span> <span class="fu">ForkJoinPool</span>(numOfTasks);
+
+      <span class="kw">for</span>(<span class="dt">int</span> index = <span class="dv">0</span>; index &lt; numOfTasks; index++)
+         futuresList.<span class="fu">add</span>(fjPool.<span class="fu">submit</span>(<span class="kw">new</span> <span class="fu">FJTask</span>(index)));
+
+      Object taskResult;
+      <span class="kw">for</span>(Future future:futuresList) {
+         <span class="kw">try</span> {
+            taskResult = future.<span class="fu">get</span>();
+            System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;result ForkJoin &quot;</span>+taskResult);
+         }
+         <span class="kw">catch</span> (InterruptedException e) {}
+         <span class="kw">catch</span> (ExecutionException e) {}
+      }
+      Double secs = <span class="kw">new</span> Double((<span class="kw">new</span> java.<span class="fu">util</span>.<span class="fu">Date</span>().<span class="fu">getTime</span>() - begTest)*<span class="fl">0.001</span>);
+      System.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;run time &quot;</span> + secs + <span class="st">&quot; secs&quot;</span>);
+   }
+
+   <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span>(String[] args) {
+      <span class="kw">new</span> <span class="fu">ForkJoinPoolTest</span>().<span class="fu">run</span>();
+      System.<span class="fu">exit</span>(<span class="dv">0</span>);
+   }
+}</code></pre>
+<p>image 12. <code>ForkJoinPoolTest</code> with 50 threads in pool result: <img src="images/12.png" title="ForkJoinPoolTest with 50 threads in pool result" /></p>
+<p>Since this implementation uses the future.get to join the results it performs slightly slower than the <code>CallBackTest</code> implementation.</p>
+<p>In my next post on this subject I will cover more in detail Java 7's Fork/Join framework.</p>
+<h2 id="environment-used"><a name="9"></a>Environment used:</h2>
+<p>All tests in this post executed on Windows 7 Enterprise 64bit.</p>
+<p>Java 6 test:</p>
+<ul>
+<li>java version &quot;1.6.0_20&quot;</li>
+<li>Java(TM) SE Runtime Environment (build 1.6.0_20-b02)</li>
+<li>Java HotSpot(TM) 64-Bit Server VM (build 16.3-b01, mixed mode)</li>
+</ul>
+<p>Java 7 test:</p>
+<ul>
+<li>java version &quot;1.7.0-ea&quot;</li>
+<li>Java(TM) SE Runtime Environment (build 1.7.0-ea-b125)</li>
+<li>Java HotSpot(TM) 64-Bit Server VM (build 20.0-b06, mixed mode)</li>
+</ul>
+<p>          </p>
+</body>
+</html>
