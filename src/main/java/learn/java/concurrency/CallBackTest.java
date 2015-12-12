@@ -1,4 +1,4 @@
-package learn.java;
+package learn.java.concurrency;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

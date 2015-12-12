@@ -1,8 +1,12 @@
 /**
  * Parallel Processing and Multi-Core Utilization with Java
+ * https://github.com/desp0916/LearnJava/blob/master/doc/Parallel_Processing_and_Multi-Core_Utilization_with_Java/Parallel_Processing_and_Multi-Core_Utilization_with_Java.md
  *
+ * Java线程(七)：Callable和Future
+ * http://blog.csdn.net/ghsau/article/details/7451464
  */
-package learn.java;
+
+package learn.java.concurrency;
 
 import java.util.concurrent.Callable;
 
@@ -17,6 +21,7 @@ public class Task implements Callable<Object> {
 		seq = i;
 	}
 
+	@Override
 	public Object call() throws Exception {
 		String str = "";
 		long begTest = new java.util.Date().getTime();
