@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.util.Scanner;
 
 class DaemonThread implements Runnable {
+
 	@Override
 	public void run() {
 		System.out.println("進入守護執行緒" + Thread.currentThread().getName());
