@@ -1,20 +1,20 @@
-#Class 類
+# 反射——Java高级开发必须懂的
 
 [慕课网 反射——Java高级开发必须懂的](http://www.imooc.com/learn/199)
 
-## 1. 在物件導向的世界裡，萬事萬物皆物件。
+## Class 類
 
-Java 語言中，靜態成員、普通數據類型類是不是物件呢？
+1. 在物件導向的世界裡，萬事萬物皆物件。
 
-### 類是誰的物件呢？
+   - Java 語言中，靜態成員、普通數據類型類是不是物件呢？
+   - 類是誰的物件呢？
+   - 類是物件，類是 java.lang.Class 類的實例物件
 
-類是物件，類是 java.lang.Class 類的實例物件
+2. 這個物件到底如何表示呢？
 
-### 2. 這個物件到底如何表示呢？
+   - There is class named Class
 
-There is class named Class
-
-### 3. Class.forName("類的全稱")
+3. Class.forName("類的全稱")
 
  - 不僅表示了類的類類型（class type），還代表了動態加載類
  - 請大家區分編譯、運行
