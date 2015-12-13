@@ -1,3 +1,10 @@
+/**
+ * [慕课网] 细说Java多线程之内存可见性
+ * http://www.imooc.com/learn/352
+ *
+ * @author	MartonZhang
+ */
+
 package learn.java.concurrency;
 
 import java.util.concurrent.locks.Lock;
