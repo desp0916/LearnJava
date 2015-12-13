@@ -19,7 +19,7 @@ package learn.java.runnable;
 class MyThread implements Runnable {
 	private int ticketCount = 5; // 一共有5張火車票
 
-	// 可加上 synchronized
+	// 應再加上 synchronized
 	@Override
 	public void run() {
 		while (ticketCount > 0) {
