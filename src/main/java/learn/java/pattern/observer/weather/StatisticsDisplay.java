@@ -1,4 +1,4 @@
-package learn.java.pattern.observer;
+package learn.java.pattern.observer.weather;
 
 public class StatisticsDisplay implements Observer, DisplayElement {
 	private float maxTemp = 0.0f;

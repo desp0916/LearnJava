@@ -1,4 +1,4 @@
-package learn.java.pattern.observer;
+package learn.java.pattern.observer.weather;
 /**
  * http://openhome.cc/Gossip/DesignPattern/ObserverPattern.htm
  *

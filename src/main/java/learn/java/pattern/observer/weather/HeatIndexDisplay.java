@@ -1,7 +1,4 @@
-package learn.java.pattern.observer.observable;
-
-import java.util.Observable;
-import java.util.Observer;
+package learn.java.pattern.observer.weather;
 
 /**
  * 酷熱指數佈告欄
@@ -9,12 +6,12 @@ import java.util.Observer;
  */
 public class HeatIndexDisplay implements Observer, DisplayElement {
 
-	Observable observable;
 	float heatIndex = 0.0f;
+	private Subject weatherData;
 
-	public HeatIndexDisplay(Observable observable) {
-		this.observable = observable;
-		observable.addObserver(this);
+	public HeatIndexDisplay(Subject weatherData) {
+		this.weatherData = weatherData;
+		weatherData.registerObserver(this);
 	}
 
 	/**
@@ -32,16 +29,10 @@ public class HeatIndexDisplay implements Observer, DisplayElement {
 		return index;
 	}
 
-	// 當此方法被呼叫時，把溫度和濕度儲存起來，然後呼叫 display()
 	@Override
-	public void update(Observable obs, Object arg) {
-		if (obs instanceof WeatherData) {
-			WeatherData weatherData = (WeatherData) obs;
-			float temperature = weatherData.getTemprature();
-			float humidity = weatherData.getHumidity();
-			this.heatIndex = computeHeatIndex(temperature, humidity);
-			display();
-		}
+	public void update(float temp, float humidity, float pressure) {
+		heatIndex = computeHeatIndex(temp, humidity);
+		display();
 	}
 
 	@Override

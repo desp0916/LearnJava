@@ -1,4 +1,4 @@
-package learn.java.pattern.observer.observable;
+package learn.java.pattern.observer.weatherobservable;
 
 import java.util.Observable;
 

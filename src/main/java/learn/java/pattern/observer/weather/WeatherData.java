@@ -1,4 +1,4 @@
-package learn.java.pattern.observer;
+package learn.java.pattern.observer.weather;
 
 import java.util.ArrayList;
 

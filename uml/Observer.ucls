@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <class-diagram version="1.1.9" icons="true" automaticImage="PNG" always-add-relationships="false" generalizations="true" 
   realizations="true" associations="true" dependencies="true" nesting-relationships="true" router="FAN">  
-  <interface id="1" language="java" name="learn.java.pattern.observer.Subject" project="LearnJava" 
-    file="/LearnJava/src/main/java/learn/java/pattern/observer/Subject.java" binary="false" corner="BOTTOM_RIGHT">    
+  <interface id="1" language="java" name="learn.java.pattern.observer.weather.Subject" project="LearnJava" 
+    file="/LearnJava/src/main/java/learn/java/pattern/observer/weather/Subject.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="166" y="250"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -10,8 +11,9 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </interface>  
-  <class id="2" language="java" name="learn.java.pattern.observer.WeatherData" project="LearnJava" 
-    file="/LearnJava/src/main/java/learn/java/pattern/observer/WeatherData.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="2" language="java" name="learn.java.pattern.observer.weather.WeatherData" project="LearnJava" 
+    file="/LearnJava/src/main/java/learn/java/pattern/observer/weather/WeatherData.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="169" y="479"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -19,8 +21,9 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="3" language="java" name="learn.java.pattern.observer.WeatherStation" project="LearnJava" 
-    file="/LearnJava/src/main/java/learn/java/pattern/observer/WeatherStation.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="3" language="java" name="learn.java.pattern.observer.weather.WeatherStation" project="LearnJava" 
+    file="/LearnJava/src/main/java/learn/java/pattern/observer/weather/WeatherStation.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="433" y="677"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -28,8 +31,9 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <interface id="4" language="java" name="learn.java.pattern.observer.Observer" project="LearnJava" 
-    file="/LearnJava/src/main/java/learn/java/pattern/observer/Observer.java" binary="false" corner="BOTTOM_RIGHT">    
+  <interface id="4" language="java" name="learn.java.pattern.observer.weather.Observer" project="LearnJava" 
+    file="/LearnJava/src/main/java/learn/java/pattern/observer/weather/Observer.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="445" y="233"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -37,8 +41,8 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </interface>  
-  <class id="5" language="java" name="learn.java.pattern.observer.CurrentConditionsDisplay" project="LearnJava" 
-    file="/LearnJava/src/main/java/learn/java/pattern/observer/CurrentConditionsDisplay.java" binary="false" 
+  <class id="5" language="java" name="learn.java.pattern.observer.weather.CurrentConditionsDisplay" project="LearnJava" 
+    file="/LearnJava/src/main/java/learn/java/pattern/observer/weather/CurrentConditionsDisplay.java" binary="false" 
     corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="639" y="484"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -47,8 +51,9 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <interface id="6" language="java" name="learn.java.pattern.observer.DisplayElement" project="LearnJava" 
-    file="/LearnJava/src/main/java/learn/java/pattern/observer/DisplayElement.java" binary="false" corner="BOTTOM_RIGHT">    
+  <interface id="6" language="java" name="learn.java.pattern.observer.weather.DisplayElement" project="LearnJava" 
+    file="/LearnJava/src/main/java/learn/java/pattern/observer/weather/DisplayElement.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="677" y="233"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -56,8 +61,8 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </interface>  
-  <class id="7" language="java" name="learn.java.pattern.observer.HeatIndexDisplay" project="LearnJava" 
-    file="/LearnJava/src/main/java/learn/java/pattern/observer/HeatIndexDisplay.java" binary="false" 
+  <class id="7" language="java" name="learn.java.pattern.observer.weather.HeatIndexDisplay" project="LearnJava" 
+    file="/LearnJava/src/main/java/learn/java/pattern/observer/weather/HeatIndexDisplay.java" binary="false" 
     corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="438" y="488"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 

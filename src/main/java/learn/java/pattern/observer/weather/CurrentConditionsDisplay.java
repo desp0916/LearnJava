@@ -1,4 +1,4 @@
-package learn.java.pattern.observer;
+package learn.java.pattern.observer.weather;
 
 /**
  * 目前氣象狀況佈告欄
@@ -22,7 +22,7 @@ public class CurrentConditionsDisplay implements Observer, DisplayElement {
 		display();
 	}
 
-	// 只是把最近的溫度和濕度顯示出來
+	// 把目前的溫度和濕度顯示出來
 	@Override
 	public void display() {
 		System.out.println("Current conditions: " + temperature +

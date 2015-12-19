@@ -1,4 +1,4 @@
-package learn.java.pattern.observer.observable;
+package learn.java.pattern.observer.weather;
 /**
  * 當佈告欄需要顯示資料時，呼叫此方法
  */
