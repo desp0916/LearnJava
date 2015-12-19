@@ -1,4 +1,4 @@
-package learn.java.pattern.observer;
+package learn.java.pattern.observer.observable;
 
 /**
  * 氣象站

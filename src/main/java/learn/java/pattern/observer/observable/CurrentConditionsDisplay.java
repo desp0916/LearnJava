@@ -1,25 +1,31 @@
-package learn.java.pattern.observer;
+package learn.java.pattern.observer.observable;
+
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  * 目前氣象狀況佈告欄
  */
 public class CurrentConditionsDisplay implements Observer, DisplayElement {
+	Observable observable;
 	private float temperature;
 	private float humidity;
-	private Subject weatherData;
 
 	// 建構式需要  weatherData 物件（也就是主題），以為註冊之用
-	public CurrentConditionsDisplay(Subject weatherData) {
-		this.weatherData = weatherData;
-		weatherData.registerObserver(this);
+	public CurrentConditionsDisplay(Observable observable) {
+		this.observable = observable;
+		observable.addObserver(this);
 	}
 
 	// 當此方法被呼叫時，把溫度和濕度儲存起來，然後呼叫 display()
 	@Override
-	public void update(float temperature, float humidity, float pressure) {
-		this.temperature = temperature;
-		this.humidity = humidity;
-		display();
+	public void update (Observable obs, Object arg) {
+		if (obs instanceof WeatherData) {
+			WeatherData weatherData = (WeatherData) obs;
+			this.temperature = weatherData.getTemprature();
+			this.humidity = weatherData.getHumidity();
+			display();
+		}
 	}
 
 	// 只是把最近的溫度和濕度顯示出來
