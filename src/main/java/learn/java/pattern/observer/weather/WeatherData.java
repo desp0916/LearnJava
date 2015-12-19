@@ -1,5 +1,8 @@
 package learn.java.pattern.observer.weather;
 
+/**
+ * 這是 Concrete Subject
+ */
 import java.util.ArrayList;
 
 public class WeatherData implements Subject {
@@ -13,6 +16,7 @@ public class WeatherData implements Subject {
 		observers = new ArrayList<Observer>();
 	}
 
+	// 多用合成，少用繼承！
 	@Override
 	public void registerObserver(Observer o) {
 		observers.add(o);
