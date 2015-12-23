@@ -1,5 +1,7 @@
 package learn.java.pattern.decorator;
-
+/**
+ * https://github.com/bethrobson/Head-First-Design-Patterns/blob/master/src/headfirst/designpatterns/decorator/starbuzz/Milk.java
+ */
 public class Milk extends CondimentDecorator {
 	Beverage beverage;
 
