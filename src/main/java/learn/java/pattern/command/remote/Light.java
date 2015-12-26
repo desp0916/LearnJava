@@ -1,11 +1,21 @@
+/**
+ * Receiver
+ */
+
 package learn.java.pattern.command.remote;
 
 public class Light {
+	String location = "";
+
+	public Light(String location) {
+		this.location = location;
+	}
+
 	public void on() {
-		System.out.println("Light is On");
+		System.out.println(location + " light is on");
 	}
 
 	public void off() {
-		System.out.println("Light is Off");
+		System.out.println(location + " light is off");
 	}
 }

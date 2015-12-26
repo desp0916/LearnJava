@@ -1,3 +1,7 @@
+/**
+ * ConcreteCommand
+ */
+
 package learn.java.pattern.command.remote;
 
 public class GarageDoorOpenCommand implements Command {

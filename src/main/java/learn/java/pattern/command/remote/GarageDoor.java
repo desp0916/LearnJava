@@ -1,23 +1,33 @@
+/**
+ * Receiver
+ */
+
 package learn.java.pattern.command.remote;
 
 public class GarageDoor {
+	String location;
+
+	public GarageDoor(String location) {
+		this.location = location;
+	}
+
 	public void up() {
-		System.out.println("GarageDoor is Open");
+		System.out.println(location + " garage Door is Up");
 	}
 
 	public void down() {
-		System.out.println("GarageDoor is Closed");
+		System.out.println(location + " garage Door is Down");
 	}
 
 	public void stop() {
-		System.out.println("GarageDoor is Stop");
+		System.out.println(location + " garage Door is Stopped");
 	}
 
 	public void lightOn() {
-		System.out.println("GarageDoor is LightOn");
+		System.out.println(location + " garage light is on");
 	}
 
 	public void lightOff() {
-		System.out.println("GarageDoor is LightOff");
+		System.out.println(location + " garage light is off");
 	}
 }

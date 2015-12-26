@@ -1,6 +1,11 @@
+/**
+ * Invoker
+ */
+
 package learn.java.pattern.command.remote;
 
 public class SimpleRemoteControl {
+
 	Command slot;
 
 	public SimpleRemoteControl() {

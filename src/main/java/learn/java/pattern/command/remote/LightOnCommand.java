@@ -1,6 +1,11 @@
+/**
+ * ConcreteCommand
+ */
+
 package learn.java.pattern.command.remote;
 
 public class LightOnCommand implements Command {
+
 	Light light;
 
 	public LightOnCommand(Light light) {

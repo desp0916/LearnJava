@@ -1,3 +1,7 @@
+/**
+ * Command
+ */
+
 package learn.java.pattern.command.remote;
 
 public interface Command {
