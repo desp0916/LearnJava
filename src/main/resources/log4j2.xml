@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN">
+<Configuration status="WARN" monitorInterval="30">
 	<Appenders>
 		<Console name="Console" target="SYSTEM_OUT">
 			<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
 		</Console>
 		<RollingFile name="DailyFile" fileName="logs/Teemo-log.log"	filePattern="logs/log-%d{yyyyMMdd-HH}~%i.log">
+<!--
 			<PatternLayout>
 				<Pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss} [%t] %c{1} - %msg%n</Pattern>
 			</PatternLayout>
+-->
+			<JSONLayout complete="false" compact="false" />
 			<Policies>
 				<TimeBasedTriggeringPolicy interval="1" modulate="true" />
 				<SizeBasedTriggeringPolicy size="10 MB" />
