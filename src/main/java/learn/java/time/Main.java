@@ -1,17 +1,58 @@
 package learn.java.time;
 
+import java.sql.Timestamp;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
 public class Main {
+
+	private static String[] FORMATS = new String[] {
+			"yyyy-MM-dd HH:mm:ss.SSS",
+			"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+			"yyyy-MM-dd'T'HH:mm:ss.SSSZ" };
+
+	private static String parseDate(String value) {
+		for (int i = 0; i < FORMATS.length; i++) {
+			SimpleDateFormat format = new SimpleDateFormat(FORMATS[i]);
+			Date temp;
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+			try {
+				temp = format.parse(value);
+				if (temp != null)
+					return df.format(temp);
+			} catch (ParseException e) {
+			}
+		}
+		System.out.println("Could not parse timestamp for log");
+		return null;
+	}
+
+	private static void testParseDate() {
+		String timeString1 = "2016-01-20T11:38:25.931+0800";
+		String timeString2 = "2016-01-20T11:38:25.931Z";
+		String timeString3 = "2016-01-20 11:38:25.931";
+
+		String d1 = parseDate(timeString1);
+		String d2 = parseDate(timeString2);
+		String d3 = parseDate(timeString3);
+
+		System.out.println(d1);
+		System.out.println(d2);
+		System.out.println(d3);
+	}
+
 	public static void main(String[] args) throws Exception {
 //		testTime1();
 //		testTime2();
 //		testTime3();
-		testTime4();
-		// testCastPromotion();
+//		testTime4();
+		ISO8601Time();
+//		JavaTimetamp();
+//		testParseDate();
+//		 testCastPromotion();
 	}
 
 	/**
@@ -184,6 +225,22 @@ public class Main {
 		// g 為 long，所以 f 自動提昇為 long，運算後為 long，裝不進 int 的 h 中
 		// int h = f + g;
 		int h = (int) (f + g);
+	}
 
+	/**
+	 * http://stackoverflow.com/questions/3914404/how-to-get-current-moment-in-iso-8601-format
+	 * 2015-05-19T13:50:00.747Z
+	 */
+	public static void ISO8601Time() {
+//		TimeZone tz = TimeZone.getTimeZone("Asia/Taipei");
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+//		df.setTimeZone(tz);
+		String nowAsISO = df.format(new Date());
+		System.out.print(nowAsISO);
+	}
+
+	public static void JavaTimetamp() {
+		String logTime = new Timestamp(new Date().getTime()).toString();
+		System.out.println(logTime);
 	}
 }
