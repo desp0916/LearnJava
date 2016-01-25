@@ -1,7 +1,14 @@
 /**
- * volatile 變數自增運算測試
+ * 12-1 volatile 變數自增運算測試
+ *
+ * - 使用以下指令來反編譯程式碼：
  *
  * javap -c VolatileTest.class
+ *
+ * - 「volatile」的用途：
+ *
+ *  1. 保證此變數對所有執行緒的「可見性」。
+ *  2. 禁止指令重排序優化。
  *
  * @author zzm
  */
