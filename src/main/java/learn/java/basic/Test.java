@@ -1,5 +1,6 @@
 package learn.java.basic;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -19,7 +20,12 @@ public class Test {
 //		testNumeric();
 //		testIntegerMINVALUE();
 //		testSimpleDateFormat();
-		testJodaTime();
+//		testJodaTime();
+		if (isDateValid("2015-02-29")) {
+			System.out.println("Valid Date!");
+		} else {
+			System.out.println("Invalid Date!");
+		}
 //		System.out.println(date);
 	}
 
@@ -134,5 +140,17 @@ public class Test {
 	        }
 	    }
 	    return true;
+	}
+
+	// http://stackoverflow.com/questions/4528047/checking-the-validity-of-a-date
+	public static boolean isDateValid(String date) {
+		try {
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+			df.setLenient(false);
+			df.parse(date);
+			return true;
+		} catch (ParseException e) {
+			return false;
+		}
 	}
 }

@@ -14,30 +14,33 @@ public class Main {
 			"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
 			"yyyy-MM-dd'T'HH:mm:ss.SSSZ" };
 
-	private static String parseDate(String value) {
+	private static String parseDateTime(String DateTimeString, String DateTimeFormat) {
 		for (int i = 0; i < FORMATS.length; i++) {
 			SimpleDateFormat format = new SimpleDateFormat(FORMATS[i]);
-			Date temp;
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+			DateFormat df = new SimpleDateFormat(DateTimeFormat);
+			format.setLenient(false);
 			try {
-				temp = format.parse(value);
-				if (temp != null)
+				Date temp = format.parse(DateTimeString);
+				if (temp != null) {
 					return df.format(temp);
+				}
 			} catch (ParseException e) {
 			}
 		}
-		System.out.println("Could not parse timestamp for log");
 		return null;
 	}
 
 	private static void testParseDate() {
-		String timeString1 = "2016-01-20T11:38:25.931+0800";
-		String timeString2 = "2016-01-20T11:38:25.931Z";
-		String timeString3 = "2016-01-20 11:38:25.931";
+		String FORMAT_DATETIME = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+		String FORMAT_DATE = "yyyy-MM-dd";
 
-		String d1 = parseDate(timeString1);
-		String d2 = parseDate(timeString2);
-		String d3 = parseDate(timeString3);
+		String timeString1 = "2016-01-23T11:38:25.931+0800";
+		String timeString2 = "2016-01-23T11:38:25.931Z";
+		String timeString3 = "2016-01-23 11:38:25.931";
+
+		String d1 = parseDateTime(timeString1, FORMAT_DATE);
+		String d2 = parseDateTime(timeString2, FORMAT_DATE);
+		String d3 = parseDateTime(timeString3, FORMAT_DATE);
 
 		System.out.println(d1);
 		System.out.println(d2);
@@ -49,10 +52,10 @@ public class Main {
 //		testTime2();
 //		testTime3();
 //		testTime4();
-		ISO8601Time();
+//		ISO8601Time();
 //		JavaTimetamp();
-//		testParseDate();
-//		 testCastPromotion();
+		testParseDate();
+//		testCastPromotion();
 	}
 
 	/**
@@ -242,5 +245,17 @@ public class Main {
 	public static void JavaTimetamp() {
 		String logTime = new Timestamp(new Date().getTime()).toString();
 		System.out.println(logTime);
+	}
+
+	// http://stackoverflow.com/questions/4528047/checking-the-validity-of-a-date
+	public static boolean isDateValid(String date) {
+		try {
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+			df.setLenient(false);
+			df.parse(date);
+			return true;
+		} catch (ParseException e) {
+			return false;
+		}
 	}
 }
