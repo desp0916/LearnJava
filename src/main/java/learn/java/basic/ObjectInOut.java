@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 class Book implements Serializable {
 	String name;
-	double price;
+	double price;	// 如果加上 transient，該屬性不會加入序列化
 	String author;
 
 	public Book(String name, double price, String author) {
