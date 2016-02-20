@@ -1,33 +1,23 @@
 package alpha;
 
-public interface A {
-	public void m1();
-}
-
-class B implements A {
-}
-
-class C implements A {
-	@Override
-	public void m1() {
+public class A {
+	public void Method1() {
+//		try {
+			B b = new B();
+//			try {
+				b.Method2();
+//			} catch (TestException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+			// more code here
+//		} catch (TestException te) {
+//			throw new RuntimeException(te);
+//		}
 	}
-}
 
-class D implements A {
-	public void m1(int x) {
-	}
-}
-
-abstract class E implements A {
-}
-
-abstract class F implements A {
-	@Override
-	public void m1() {
-	}
-}
-
-abstract class G implements A {
-	public void m1(int x) {
+	public static void main(String[] args) {
+		A a = new A();
+		a.Method1();
 	}
 }
