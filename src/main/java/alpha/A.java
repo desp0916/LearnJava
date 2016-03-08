@@ -1,23 +1,23 @@
 package alpha;
 
 public class A {
-	public void Method1() {
-//		try {
-			B b = new B();
-//			try {
-				b.Method2();
-//			} catch (TestException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-			// more code here
-//		} catch (TestException te) {
-//			throw new RuntimeException(te);
-//		}
+
+	public static void go(Long n) {
+		System.out.print("Long ");
+	}
+
+	public static void go(Short n) {
+		System.out.print("Short ");
+	}
+
+	public static void go(int n) {
+		System.out.print("int ");
 	}
 
 	public static void main(String[] args) {
-		A a = new A();
-		a.Method1();
+		short y = 6;
+		long z = 7;
+		go(y);
+		go(z);
 	}
 }
